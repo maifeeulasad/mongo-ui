@@ -197,6 +197,7 @@ class MongoDBService {
     const db = connection.client.db(databaseName)
     const collection = db.collection(collectionName)
     
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { _id, ...updateDoc } = document
     
     // Try to parse as ObjectId, fallback to string

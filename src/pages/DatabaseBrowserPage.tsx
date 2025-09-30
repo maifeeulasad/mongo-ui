@@ -160,7 +160,7 @@ export default function DatabaseBrowserPage() {
                   'text-lg font-semibold',
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 )}>
-                  Collections in "{selectedDatabase}"
+                  Collections in &quot;{selectedDatabase}&quot;
                 </h2>
                 <span className={cn(
                   'text-sm px-2 py-1 rounded-full',

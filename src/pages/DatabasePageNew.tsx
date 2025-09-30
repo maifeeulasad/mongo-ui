@@ -144,7 +144,7 @@ export default function DatabasePage() {
                 'text-sm',
                 isDarkMode ? 'text-gray-500' : 'text-gray-600'
               )}>
-                This database doesn't contain any collections yet
+                This database doesn&apos;t contain any collections yet
               </p>
             </div>
           ) : (

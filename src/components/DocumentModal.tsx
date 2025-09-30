@@ -228,7 +228,7 @@ export default function DocumentModal({
                       : 'bg-yellow-50 border-yellow-200 text-yellow-800'
                   )}>
                     <p className="text-sm">
-                      <strong>Warning:</strong> Modifying the _id field may cause issues. It's recommended to keep the original _id value.
+                      <strong>Warning:</strong> Modifying the _id field may cause issues. It&apos;s recommended to keep the original _id value.
                     </p>
                   </div>
                 )}
