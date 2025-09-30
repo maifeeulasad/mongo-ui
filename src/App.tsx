@@ -6,6 +6,7 @@ import HomePage from '@/pages/HomePage'
 import ConnectionsPage from '@/pages/ConnectionsPage'
 import DatabasePage from '@/pages/DatabasePage'
 import DatabaseBrowserPage from '@/pages/DatabaseBrowserPage'
+import CollectionPage from '@/pages/CollectionPage'
 import { useAppStore } from '@/store/appStore'
 
 function App() {
@@ -86,6 +87,19 @@ function App() {
                   transition={{ duration: 0.3 }}
                 >
                   <DatabaseBrowserPage />
+                </motion.div>
+              } 
+            />
+            <Route 
+              path="/collection/:connectionId/:databaseName/:collectionName" 
+              element={
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <CollectionPage />
                 </motion.div>
               } 
             />

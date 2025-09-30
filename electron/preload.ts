@@ -44,6 +44,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('mongodb-list-databases', connectionId),
     listCollections: (connectionId: string, databaseName: string) => 
       ipcRenderer.invoke('mongodb-list-collections', connectionId, databaseName),
+    getDocuments: (connectionId: string, databaseName: string, collectionName: string, options?: any) => 
+      ipcRenderer.invoke('mongodb-get-documents', connectionId, databaseName, collectionName, options),
+    insertDocument: (connectionId: string, databaseName: string, collectionName: string, document: any) => 
+      ipcRenderer.invoke('mongodb-insert-document', connectionId, databaseName, collectionName, document),
+    updateDocument: (connectionId: string, databaseName: string, collectionName: string, documentId: string, document: any) => 
+      ipcRenderer.invoke('mongodb-update-document', connectionId, databaseName, collectionName, documentId, document),
+    deleteDocument: (connectionId: string, databaseName: string, collectionName: string, documentId: string) => 
+      ipcRenderer.invoke('mongodb-delete-document', connectionId, databaseName, collectionName, documentId),
     isConnected: (connectionId: string) => 
       ipcRenderer.invoke('mongodb-is-connected', connectionId),
   },
@@ -65,6 +73,10 @@ export interface ElectronAPI {
     testConnection: (connection: Connection) => Promise<{ success: boolean; error?: string }>
     listDatabases: (connectionId: string) => Promise<string[]>
     listCollections: (connectionId: string, databaseName: string) => Promise<string[]>
+    getDocuments: (connectionId: string, databaseName: string, collectionName: string, options?: any) => Promise<{ documents: any[], total: number }>
+    insertDocument: (connectionId: string, databaseName: string, collectionName: string, document: any) => Promise<string>
+    updateDocument: (connectionId: string, databaseName: string, collectionName: string, documentId: string, document: any) => Promise<void>
+    deleteDocument: (connectionId: string, databaseName: string, collectionName: string, documentId: string) => Promise<void>
     isConnected: (connectionId: string) => Promise<boolean>
   }
   removeAllListeners: (channel: string) => void

@@ -202,6 +202,22 @@ class AppWindow {
       return await mongoDBService.listCollections(connectionId, databaseName)
     })
 
+    ipcMain.handle('mongodb-get-documents', async (_, connectionId, databaseName, collectionName, options) => {
+      return await mongoDBService.getDocuments(connectionId, databaseName, collectionName, options)
+    })
+
+    ipcMain.handle('mongodb-insert-document', async (_, connectionId, databaseName, collectionName, document) => {
+      return await mongoDBService.insertDocument(connectionId, databaseName, collectionName, document)
+    })
+
+    ipcMain.handle('mongodb-update-document', async (_, connectionId, databaseName, collectionName, documentId, document) => {
+      return await mongoDBService.updateDocument(connectionId, databaseName, collectionName, documentId, document)
+    })
+
+    ipcMain.handle('mongodb-delete-document', async (_, connectionId, databaseName, collectionName, documentId) => {
+      return await mongoDBService.deleteDocument(connectionId, databaseName, collectionName, documentId)
+    })
+
     ipcMain.handle('mongodb-is-connected', async (_, connectionId) => {
       return mongoDBService.isConnected(connectionId)
     })

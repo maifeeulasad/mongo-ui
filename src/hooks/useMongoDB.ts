@@ -184,6 +184,112 @@ export function useMongoDB() {
     }
   }, [setError, setLoading, setSelectedDatabase, setCollections])
 
+  const getDocuments = useCallback(async (
+    connectionId: string, 
+    databaseName: string, 
+    collectionName: string,
+    options?: {
+      page?: number
+      limit?: number
+      search?: string
+      filter?: any
+    }
+  ) => {
+    if (!window.electronAPI?.mongodb) {
+      setError('MongoDB functionality is only available in the desktop app')
+      return { documents: [], total: 0 }
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      return await window.electronAPI.mongodb.getDocuments(connectionId, databaseName, collectionName, options)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load documents'
+      setError(errorMessage)
+      return { documents: [], total: 0 }
+    } finally {
+      setLoading(false)
+    }
+  }, [setError, setLoading])
+
+  const insertDocument = useCallback(async (
+    connectionId: string,
+    databaseName: string,
+    collectionName: string,
+    document: any
+  ) => {
+    if (!window.electronAPI?.mongodb) {
+      setError('MongoDB functionality is only available in the desktop app')
+      return ''
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      return await window.electronAPI.mongodb.insertDocument(connectionId, databaseName, collectionName, document)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to insert document'
+      setError(errorMessage)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }, [setError, setLoading])
+
+  const updateDocument = useCallback(async (
+    connectionId: string,
+    databaseName: string,
+    collectionName: string,
+    documentId: string,
+    document: any
+  ) => {
+    if (!window.electronAPI?.mongodb) {
+      setError('MongoDB functionality is only available in the desktop app')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      await window.electronAPI.mongodb.updateDocument(connectionId, databaseName, collectionName, documentId, document)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update document'
+      setError(errorMessage)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }, [setError, setLoading])
+
+  const deleteDocument = useCallback(async (
+    connectionId: string,
+    databaseName: string,
+    collectionName: string,
+    documentId: string
+  ) => {
+    if (!window.electronAPI?.mongodb) {
+      setError('MongoDB functionality is only available in the desktop app')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      await window.electronAPI.mongodb.deleteDocument(connectionId, databaseName, collectionName, documentId)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete document'
+      setError(errorMessage)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }, [setError, setLoading])
+
   return {
     connectToMongoDB,
     disconnectFromMongoDB,
@@ -192,6 +298,10 @@ export function useMongoDB() {
     listDatabases,
     listCollections,
     selectDatabase,
+    getDocuments,
+    insertDocument,
+    updateDocument,
+    deleteDocument,
     isElectronAvailable: !!window.electronAPI?.mongodb,
   }
 }

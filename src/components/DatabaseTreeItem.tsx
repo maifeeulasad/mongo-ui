@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ChevronRightIcon, 
@@ -126,12 +127,13 @@ interface CollectionItemProps {
 }
 
 function CollectionItem({ name, connectionId, databaseName }: CollectionItemProps) {
+  const navigate = useNavigate()
   const [isSelected, setIsSelected] = useState(false)
 
   const handleSelect = () => {
     setIsSelected(!isSelected)
-    // TODO: Navigate to collection view or update selected collection state
-    console.log('Selected collection:', { connectionId, databaseName, collection: name })
+    // Navigate to collection page
+    navigate(`/collection/${connectionId}/${databaseName}/${name}`)
   }
 
   return (

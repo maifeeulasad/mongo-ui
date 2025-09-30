@@ -1,4 +1,4 @@
-import { MongoClient, Db } from 'mongodb'
+import { MongoClient, Db, ObjectId } from 'mongodb'
 
 export interface Connection {
   id: string
@@ -107,6 +107,127 @@ class MongoDBService {
     const db = connection.client.db(databaseName)
     const collections = await db.listCollections().toArray()
     return collections.map(col => col.name)
+  }
+
+  async getDocuments(connectionId: string, databaseName: string, collectionName: string, options: {
+    page?: number
+    limit?: number
+    search?: string
+    filter?: any
+  } = {}): Promise<{ documents: any[], total: number }> {
+    const connection = this.connections.get(connectionId)
+    if (!connection || !connection.isConnected) {
+      throw new Error('No active connection found')
+    }
+
+    const db = connection.client.db(databaseName)
+    const collection = db.collection(collectionName)
+    
+    let query = options.filter || {}
+    
+    // Add search functionality (simple text search)
+    if (options.search && options.search.trim()) {
+      const searchTerm = options.search.trim()
+      
+      // Try text search first
+      try {
+        const textSearchQuery = { $text: { $search: searchTerm } }
+        const testResult = await collection.findOne(textSearchQuery)
+        if (testResult) {
+          query = textSearchQuery
+        } else {
+          throw new Error('No text index')
+        }
+      } catch {
+        // Fallback to regex search on common string fields
+        const sampleDoc = await collection.findOne({})
+        if (sampleDoc) {
+          const stringFields = Object.keys(sampleDoc).filter(key => 
+            typeof sampleDoc[key] === 'string' && key !== '_id'
+          )
+          
+          if (stringFields.length > 0) {
+            query = {
+              $or: stringFields.map(field => ({
+                [field]: { $regex: searchTerm, $options: 'i' }
+              }))
+            }
+          }
+        }
+      }
+    }
+
+    const page = options.page || 1
+    const limit = options.limit || 20
+    const skip = (page - 1) * limit
+
+    const [documents, total] = await Promise.all([
+      collection.find(query).skip(skip).limit(limit).toArray(),
+      collection.countDocuments(query)
+    ])
+
+    return {
+      documents: documents.map(doc => ({
+        ...doc,
+        _id: doc._id.toString()
+      })),
+      total
+    }
+  }
+
+  async insertDocument(connectionId: string, databaseName: string, collectionName: string, document: any): Promise<string> {
+    const connection = this.connections.get(connectionId)
+    if (!connection || !connection.isConnected) {
+      throw new Error('No active connection found')
+    }
+
+    const db = connection.client.db(databaseName)
+    const collection = db.collection(collectionName)
+    
+    const result = await collection.insertOne(document)
+    return result.insertedId.toString()
+  }
+
+  async updateDocument(connectionId: string, databaseName: string, collectionName: string, documentId: string, document: any): Promise<void> {
+    const connection = this.connections.get(connectionId)
+    if (!connection || !connection.isConnected) {
+      throw new Error('No active connection found')
+    }
+
+    const db = connection.client.db(databaseName)
+    const collection = db.collection(collectionName)
+    
+    const { _id, ...updateDoc } = document
+    
+    // Try to parse as ObjectId, fallback to string
+    let query: any
+    try {
+      query = { _id: new ObjectId(documentId) }
+    } catch {
+      query = { _id: documentId }
+    }
+    
+    await collection.updateOne(query, { $set: updateDoc })
+  }
+
+  async deleteDocument(connectionId: string, databaseName: string, collectionName: string, documentId: string): Promise<void> {
+    const connection = this.connections.get(connectionId)
+    if (!connection || !connection.isConnected) {
+      throw new Error('No active connection found')
+    }
+
+    const db = connection.client.db(databaseName)
+    const collection = db.collection(collectionName)
+    
+    // Try to parse as ObjectId, fallback to string
+    let query: any
+    try {
+      query = { _id: new ObjectId(documentId) }
+    } catch {
+      query = { _id: documentId }
+    }
+    
+    await collection.deleteOne(query)
   }
 
   getConnection(connectionId: string): MongoConnection | undefined {
