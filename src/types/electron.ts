@@ -12,6 +12,10 @@ export interface ElectronAPI {
     listDatabases: (connectionId: string) => Promise<string[]>
     listCollections: (connectionId: string, databaseName: string) => Promise<string[]>
     isConnected: (connectionId: string) => Promise<boolean>
+    getDocuments: (connectionId: string, databaseName: string, collectionName: string, options?: any) => Promise<any>
+    insertDocument: (connectionId: string, databaseName: string, collectionName: string, document: any) => Promise<any>
+    updateDocument: (connectionId: string, databaseName: string, collectionName: string, documentId: string, document: any) => Promise<void>
+    deleteDocument: (connectionId: string, databaseName: string, collectionName: string, documentId: string) => Promise<void>
   }
   removeAllListeners: (channel: string) => void
 }

@@ -12,11 +12,3 @@ export interface WindowState {
   isMaximized: boolean
   isFullscreen: boolean
 }
-
-export interface ElectronAPI {
-  getVersion: () => Promise<string>
-  getPlatform: () => Promise<NodeJS.Platform>
-  showMessageBox: (options: any) => Promise<any>
-  onMenuNewConnection: (callback: () => void) => void
-  removeAllListeners: (channel: string) => void
-}

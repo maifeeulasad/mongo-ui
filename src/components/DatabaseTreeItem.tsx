@@ -23,7 +23,7 @@ export function DatabaseTreeItem({ connectionId, databaseName, isSelected }: Dat
   const [collections, setCollections] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   
-  const { selectedDatabase, setSelectedDatabase } = useAppStore()
+  const { setSelectedDatabase } = useAppStore()
   const { selectDatabase, listCollections } = useMongoDB()
 
   const handleToggle = async () => {
