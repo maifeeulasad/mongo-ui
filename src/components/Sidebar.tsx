@@ -59,8 +59,14 @@ export default function Sidebar() {
   }, [connections, checkConnectionStatus, updateConnection, activeConnection, setActiveConnection, setDatabases])
 
   const handleConnect = async (connection: any) => {
-    // The connectToMongoDB hook will handle all state updates including setActiveConnection
-    await connectToMongoDB(connection)
+    try {
+      console.log('🔌 Sidebar: Starting connection to:', connection.name)
+      // The connectToMongoDB hook will handle all state updates including setActiveConnection
+      await connectToMongoDB(connection)
+      console.log('✅ Sidebar: Connection completed for:', connection.name)
+    } catch (error) {
+      console.error('❌ Sidebar: Connection failed for:', connection.name, error)
+    }
   }
 
   const handleDisconnect = async (connection: any) => {
@@ -235,14 +241,14 @@ export default function Sidebar() {
       </div>
 
       {/* Database Tree Section */}
-      {activeConnection?.isConnected && databases.length >= 0 && (
+      {activeConnection && activeConnection.isConnected && (
         <div className="flex-1 p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <h3 className={cn(
               'text-sm font-semibold',
               isDarkMode ? 'text-gray-200' : 'text-gray-900'
             )}>
-              Databases
+              Databases ({activeConnection.name})
             </h3>
             <span className={cn(
               'text-xs px-2 py-1 rounded-full',

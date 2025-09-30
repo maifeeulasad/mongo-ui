@@ -2,6 +2,7 @@ import { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import ConnectionDebug from './ConnectionDebug'
 import { useAppStore } from '@/store/appStore'
 import { cn } from '@/utils'
 
@@ -35,6 +36,9 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
+        
+        {/* Debug panel - remove this later */}
+        <ConnectionDebug />
         
         <main className="main-content flex-1 overflow-auto">
           <div className="h-full">

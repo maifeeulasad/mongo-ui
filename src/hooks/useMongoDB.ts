@@ -23,30 +23,36 @@ export function useMongoDB() {
     setError(null)
 
     try {
+      console.log('🔌 useMongoDB: Attempting to connect to:', connection.name)
       const result = await window.electronAPI.mongodb.connect(connection)
       
       if (result.success) {
-        // Update the connection status in the store
+        console.log('✅ useMongoDB: Connected successfully to:', connection.name)
+        
+        // Update the connection status in the store first
+        updateConnection(connection.id, { 
+          isConnected: true, 
+          lastConnected: new Date() 
+        })
+        
+        // Get the updated connection from the store and set as active
         const updatedConnection = { 
           ...connection,
           isConnected: true, 
           lastConnected: new Date() 
         }
         
-        updateConnection(connection.id, { 
-          isConnected: true, 
-          lastConnected: new Date() 
-        })
-        
         setActiveConnection(updatedConnection)
+        console.log('🎯 useMongoDB: Set active connection:', updatedConnection.name)
         
         // Automatically load databases after successful connection
         try {
+          console.log('📊 useMongoDB: Loading databases for:', connection.name)
           const databases = await window.electronAPI.mongodb.listDatabases(connection.id)
           setDatabases(databases)
-          console.log('Connected and loaded databases:', databases.length)
+          console.log('✅ useMongoDB: Loaded', databases.length, 'databases:', databases)
         } catch (dbError) {
-          console.error('Failed to load databases after connection:', dbError)
+          console.error('❌ useMongoDB: Failed to load databases after connection:', dbError)
           // Still set as connected even if database loading fails
         }
         
