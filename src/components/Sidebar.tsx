@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -10,6 +10,7 @@ import {
   NoSymbolIcon
 } from '@heroicons/react/24/outline'
 import { useAppStore } from '@/store/appStore'
+import { useMongoDB } from '@/hooks/useMongoDB'
 import { cn } from '@/utils'
 import ConnectionModal from './ConnectionModal'
 
@@ -23,14 +24,42 @@ export default function Sidebar() {
     isDarkMode 
   } = useAppStore()
   
+  const { connectToMongoDB, disconnectFromMongoDB, checkConnectionStatus } = useMongoDB()
   const [showConnectionModal, setShowConnectionModal] = useState(false)
 
-  const handleConnect = (connection: any) => {
-    // TODO: Implement actual connection logic
+  // Check connection status on mount
+  useEffect(() => {
+    const checkAllConnections = async () => {
+      for (const connection of connections) {
+        if (connection.isConnected) {
+          const isStillConnected = await checkConnectionStatus(connection.id)
+          if (!isStillConnected) {
+            // Update connection status if it's no longer connected
+            setActiveConnection({ ...connection, isConnected: false })
+          }
+        }
+      }
+    }
+    
+    checkAllConnections()
+  }, [connections, checkConnectionStatus, setActiveConnection])
+
+  const handleConnect = async (connection: any) => {
+    const success = await connectToMongoDB(connection)
+    if (success) {
+      setActiveConnection({
+        ...connection,
+        isConnected: true,
+        lastConnected: new Date()
+      })
+    }
+  }
+
+  const handleDisconnect = async (connection: any) => {
+    await disconnectFromMongoDB(connection.id)
     setActiveConnection({
       ...connection,
-      isConnected: true,
-      lastConnected: new Date()
+      isConnected: false
     })
   }
 
@@ -129,7 +158,13 @@ export default function Sidebar() {
                       ? 'hover:bg-gray-700'
                       : 'hover:bg-gray-100'
                 )}
-                onClick={() => handleConnect(connection)}
+                onClick={() => {
+                  if (connection.isConnected) {
+                    handleDisconnect(connection)
+                  } else {
+                    handleConnect(connection)
+                  }
+                }}
               >
                 <div className="flex items-center space-x-3 min-w-0 flex-1">
                   {connection.isConnected ? (

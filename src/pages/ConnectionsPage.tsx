@@ -8,6 +8,7 @@ import {
   NoSymbolIcon 
 } from '@heroicons/react/24/outline'
 import { useAppStore } from '@/store/appStore'
+import { useMongoDB } from '@/hooks/useMongoDB'
 import { cn, formatDate } from '@/utils'
 import ConnectionModal from '@/components/ConnectionModal'
 
@@ -20,24 +21,36 @@ export default function ConnectionsPage() {
     isDarkMode 
   } = useAppStore()
   
+  const { connectToMongoDB, disconnectFromMongoDB, testConnection } = useMongoDB()
   const [showConnectionModal, setShowConnectionModal] = useState(false)
 
-  const handleConnect = (connection: any) => {
-    // TODO: Implement actual connection logic
-    setActiveConnection({
-      ...connection,
-      isConnected: true,
-      lastConnected: new Date()
-    })
+  const handleConnect = async (connection: any) => {
+    const success = await connectToMongoDB(connection)
+    if (success) {
+      setActiveConnection({
+        ...connection,
+        isConnected: true,
+        lastConnected: new Date()
+      })
+    }
   }
 
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
     if (activeConnection) {
+      await disconnectFromMongoDB(activeConnection.id)
       setActiveConnection({
         ...activeConnection,
         isConnected: false
       })
     }
+  }
+
+  const handleTestConnection = async (connection: any) => {
+    const success = await testConnection(connection)
+    if (success) {
+      alert('Connection test successful!')
+    }
+    // Error handling is done in the useMongoDB hook
   }
 
   const handleRemoveConnection = (connectionId: string) => {
@@ -178,7 +191,10 @@ export default function ConnectionsPage() {
                       Connect
                     </button>
                   )}
-                  <button className="btn-outline">
+                  <button
+                    onClick={() => handleTestConnection(connection)}
+                    className="btn-outline"
+                  >
                     Test
                   </button>
                 </div>

@@ -3,6 +3,7 @@ import { Dialog } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/store/appStore'
+import { useMongoDB } from '@/hooks/useMongoDB'
 import { cn } from '@/utils'
 
 interface ConnectionModalProps {
@@ -12,6 +13,7 @@ interface ConnectionModalProps {
 
 export default function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
   const { addConnection, isDarkMode } = useAppStore()
+  const { testConnection } = useMongoDB()
   
   const [formData, setFormData] = useState({
     name: '',
@@ -24,6 +26,9 @@ export default function ConnectionModal({ isOpen, onClose }: ConnectionModalProp
     authDatabase: 'admin',
   })
 
+  const [isTestingConnection, setIsTestingConnection] = useState(false)
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -33,6 +38,37 @@ export default function ConnectionModal({ isOpen, onClose }: ConnectionModalProp
     }
 
     addConnection(formData)
+    resetForm()
+    onClose()
+  }
+
+  const handleTestConnection = async () => {
+    if (!formData.name || !formData.host) {
+      setTestResult({ success: false, message: 'Name and host are required' })
+      return
+    }
+
+    setIsTestingConnection(true)
+    setTestResult(null)
+
+    const tempConnection = {
+      ...formData,
+      id: 'temp-test-id',
+      isConnected: false,
+      createdAt: new Date(),
+    }
+
+    const success = await testConnection(tempConnection)
+    
+    setTestResult({
+      success,
+      message: success ? 'Connection successful!' : 'Connection failed. Please check your settings.'
+    })
+    
+    setIsTestingConnection(false)
+  }
+
+  const resetForm = () => {
     setFormData({
       name: '',
       host: 'localhost',
@@ -43,7 +79,7 @@ export default function ConnectionModal({ isOpen, onClose }: ConnectionModalProp
       ssl: false,
       authDatabase: 'admin',
     })
-    onClose()
+    setTestResult(null)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -281,6 +317,18 @@ export default function ConnectionModal({ isOpen, onClose }: ConnectionModalProp
                     </label>
                   </div>
 
+                  {/* Test Connection Result */}
+                  {testResult && (
+                    <div className={cn(
+                      'p-3 rounded-lg text-sm',
+                      testResult.success
+                        ? 'bg-green-100 text-green-800 border border-green-200'
+                        : 'bg-red-100 text-red-800 border border-red-200'
+                    )}>
+                      {testResult.message}
+                    </div>
+                  )}
+
                   <div className="flex justify-end space-x-3 pt-4">
                     <button
                       type="button"
@@ -290,10 +338,21 @@ export default function ConnectionModal({ isOpen, onClose }: ConnectionModalProp
                       Cancel
                     </button>
                     <button
+                      type="button"
+                      onClick={handleTestConnection}
+                      disabled={isTestingConnection}
+                      className={cn(
+                        'btn-secondary',
+                        isTestingConnection && 'opacity-50 cursor-not-allowed'
+                      )}
+                    >
+                      {isTestingConnection ? 'Testing...' : 'Test Connection'}
+                    </button>
+                    <button
                       type="submit"
                       className="btn-primary"
                     >
-                      Connect
+                      Save Connection
                     </button>
                   </div>
                 </form>

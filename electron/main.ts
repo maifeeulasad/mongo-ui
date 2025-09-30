@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Menu, shell, ipcMain } from 'electron'
 import { join } from 'path'
 import { isDev } from './utils'
+import { mongoDBService } from './mongodb-service'
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -178,6 +179,31 @@ class AppWindow {
         const { dialog } = await import('electron')
         return dialog.showMessageBox(this.mainWindow, options)
       }
+    })
+
+    // MongoDB IPC handlers
+    ipcMain.handle('mongodb-connect', async (_, connection) => {
+      return await mongoDBService.connect(connection)
+    })
+
+    ipcMain.handle('mongodb-disconnect', async (_, connectionId) => {
+      return await mongoDBService.disconnect(connectionId)
+    })
+
+    ipcMain.handle('mongodb-test-connection', async (_, connection) => {
+      return await mongoDBService.testConnection(connection)
+    })
+
+    ipcMain.handle('mongodb-list-databases', async (_, connectionId) => {
+      return await mongoDBService.listDatabases(connectionId)
+    })
+
+    ipcMain.handle('mongodb-list-collections', async (_, connectionId, databaseName) => {
+      return await mongoDBService.listCollections(connectionId, databaseName)
+    })
+
+    ipcMain.handle('mongodb-is-connected', async (_, connectionId) => {
+      return mongoDBService.isConnected(connectionId)
     })
   }
 }
