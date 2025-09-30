@@ -11,6 +11,11 @@ interface AppState {
   connections: Connection[]
   activeConnection: Connection | null
   
+  // Database state
+  databases: string[]
+  selectedDatabase: string | null
+  collections: string[]
+  
   // UI state
   sidebarOpen: boolean
   isLoading: boolean
@@ -24,6 +29,9 @@ interface AppState {
   updateConnection: (id: string, updates: Partial<Connection>) => void
   removeConnection: (id: string) => void
   setActiveConnection: (connection: Connection | null) => void
+  setDatabases: (databases: string[]) => void
+  setSelectedDatabase: (database: string | null) => void
+  setCollections: (collections: string[]) => void
   toggleSidebar: () => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
@@ -44,6 +52,9 @@ export const useAppStore = create<AppState>()(
         },
         connections: [],
         activeConnection: null,
+        databases: [],
+        selectedDatabase: null,
+        collections: [],
         sidebarOpen: true,
         isLoading: false,
         error: null,
@@ -124,6 +135,18 @@ export const useAppStore = create<AppState>()(
 
         setActiveConnection: (connection) => {
           set({ activeConnection: connection })
+        },
+
+        setDatabases: (databases) => {
+          set({ databases })
+        },
+
+        setSelectedDatabase: (database) => {
+          set({ selectedDatabase: database })
+        },
+
+        setCollections: (collections) => {
+          set({ collections })
         },
 
         toggleSidebar: () => {

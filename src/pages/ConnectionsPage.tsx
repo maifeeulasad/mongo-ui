@@ -79,7 +79,7 @@ export default function ConnectionsPage() {
               'text-sm mt-1',
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             )}>
-              Manage your MongoDB connections
+              Manage your MongoDB connections. Once connected, browse databases and collections in the sidebar.
             </p>
           </div>
           <button

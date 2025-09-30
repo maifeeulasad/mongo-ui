@@ -3,7 +3,15 @@ import { useAppStore } from '@/store/appStore'
 import type { Connection } from '@/types'
 
 export function useMongoDB() {
-  const { setError, setLoading, updateConnection } = useAppStore()
+  const { 
+    setError, 
+    setLoading, 
+    updateConnection, 
+    setActiveConnection,
+    setDatabases,
+    setSelectedDatabase,
+    setCollections
+  } = useAppStore()
 
   const connectToMongoDB = useCallback(async (connection: Connection) => {
     if (!window.electronAPI?.mongodb) {
@@ -22,6 +30,16 @@ export function useMongoDB() {
           isConnected: true, 
           lastConnected: new Date() 
         })
+        setActiveConnection({ ...connection, isConnected: true })
+        
+        // Automatically load databases after successful connection
+        try {
+          const databases = await window.electronAPI.mongodb.listDatabases(connection.id)
+          setDatabases(databases)
+        } catch (dbError) {
+          console.error('Failed to load databases after connection:', dbError)
+        }
+        
         return true
       } else {
         setError(result.error || 'Failed to connect to MongoDB')
@@ -36,7 +54,7 @@ export function useMongoDB() {
     } finally {
       setLoading(false)
     }
-  }, [setError, setLoading, updateConnection])
+  }, [setError, setLoading, updateConnection, setActiveConnection, setDatabases])
 
   const disconnectFromMongoDB = useCallback(async (connectionId: string) => {
     if (!window.electronAPI?.mongodb) {
@@ -50,13 +68,17 @@ export function useMongoDB() {
     try {
       await window.electronAPI.mongodb.disconnect(connectionId)
       updateConnection(connectionId, { isConnected: false })
+      setActiveConnection(null)
+      setDatabases([])
+      setSelectedDatabase(null)
+      setCollections([])
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to disconnect'
       setError(errorMessage)
     } finally {
       setLoading(false)
     }
-  }, [setError, setLoading, updateConnection])
+  }, [setError, setLoading, updateConnection, setActiveConnection, setDatabases, setSelectedDatabase, setCollections])
 
   const testConnection = useCallback(async (connection: Connection) => {
     if (!window.electronAPI?.mongodb) {
@@ -137,6 +159,31 @@ export function useMongoDB() {
     }
   }, [setError, setLoading])
 
+  const selectDatabase = useCallback(async (connectionId: string, databaseName: string) => {
+    if (!window.electronAPI?.mongodb) {
+      setError('MongoDB functionality is only available in the desktop app')
+      return []
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      setSelectedDatabase(databaseName)
+      const collections = await window.electronAPI.mongodb.listCollections(connectionId, databaseName)
+      setCollections(collections)
+      return collections
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load collections'
+      setError(errorMessage)
+      setSelectedDatabase(null)
+      setCollections([])
+      return []
+    } finally {
+      setLoading(false)
+    }
+  }, [setError, setLoading, setSelectedDatabase, setCollections])
+
   return {
     connectToMongoDB,
     disconnectFromMongoDB,
@@ -144,6 +191,7 @@ export function useMongoDB() {
     checkConnectionStatus,
     listDatabases,
     listCollections,
+    selectDatabase,
     isElectronAvailable: !!window.electronAPI?.mongodb,
   }
 }
