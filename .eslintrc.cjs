@@ -7,14 +7,14 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
     'plugin:react/jsx-runtime',
   ],
   ignorePatterns: ['dist', '.eslintrc.cjs'],
   parser: '@typescript-eslint/parser',
-  plugins: ['react-refresh'],
+  plugins: ['react-refresh', '@typescript-eslint'],
   rules: {
     'react-refresh/only-export-components': [
       'warn',
