@@ -25,46 +25,47 @@ export default function Sidebar() {
     removeConnection,
     databases,
     selectedDatabase,
+    updateConnection,
+    setDatabases,
     isDarkMode 
   } = useAppStore()
   
   const { connectToMongoDB, disconnectFromMongoDB, checkConnectionStatus } = useMongoDB()
   const [showConnectionModal, setShowConnectionModal] = useState(false)
 
-  // Check connection status on mount
+  // Check connection status on mount and when connections change
   useEffect(() => {
     const checkAllConnections = async () => {
       for (const connection of connections) {
         if (connection.isConnected) {
-          const isStillConnected = await checkConnectionStatus(connection.id)
-          if (!isStillConnected) {
-            // Update connection status if it's no longer connected
-            setActiveConnection({ ...connection, isConnected: false })
+          try {
+            const isStillConnected = await checkConnectionStatus(connection.id)
+            if (!isStillConnected) {
+              // Update connection status if it's no longer connected
+              updateConnection(connection.id, { isConnected: false })
+              if (activeConnection?.id === connection.id) {
+                setActiveConnection(null)
+                setDatabases([])
+              }
+            }
+          } catch (error) {
+            console.error('Error checking connection status:', error)
           }
         }
       }
     }
     
     checkAllConnections()
-  }, [connections, checkConnectionStatus, setActiveConnection])
+  }, [connections, checkConnectionStatus, updateConnection, activeConnection, setActiveConnection, setDatabases])
 
   const handleConnect = async (connection: any) => {
-    const success = await connectToMongoDB(connection)
-    if (success) {
-      setActiveConnection({
-        ...connection,
-        isConnected: true,
-        lastConnected: new Date()
-      })
-    }
+    // The connectToMongoDB hook will handle all state updates including setActiveConnection
+    await connectToMongoDB(connection)
   }
 
   const handleDisconnect = async (connection: any) => {
+    // The disconnectFromMongoDB hook will handle all state updates
     await disconnectFromMongoDB(connection.id)
-    setActiveConnection({
-      ...connection,
-      isConnected: false
-    })
   }
 
   const handleRemoveConnection = (e: React.MouseEvent, connectionId: string) => {
@@ -167,16 +168,20 @@ export default function Sidebar() {
                       ? 'hover:bg-gray-700'
                       : 'hover:bg-gray-100'
                 )}
-                onClick={() => {
-                  if (connection.isConnected) {
-                    handleDisconnect(connection)
+                onClick={async () => {
+                  // Check the actual connection status from the store, not the prop
+                  const storeConnection = connections.find(c => c.id === connection.id)
+                  const isCurrentlyConnected = storeConnection?.isConnected || false
+                  
+                  if (isCurrentlyConnected) {
+                    await handleDisconnect(connection)
                   } else {
-                    handleConnect(connection)
+                    await handleConnect(connection)
                   }
                 }}
               >
                 <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  {connection.isConnected ? (
+                  {connections.find(c => c.id === connection.id)?.isConnected ? (
                     <WifiIcon className="h-4 w-4 text-green-500 flex-shrink-0" />
                   ) : (
                     <NoSymbolIcon className="h-4 w-4 text-red-500 flex-shrink-0" />
@@ -230,7 +235,7 @@ export default function Sidebar() {
       </div>
 
       {/* Database Tree Section */}
-      {activeConnection?.isConnected && (
+      {activeConnection?.isConnected && databases.length >= 0 && (
         <div className="flex-1 p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <h3 className={cn(
@@ -253,7 +258,7 @@ export default function Sidebar() {
                 'text-center py-4',
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
               )}>
-                <p className="text-sm">No databases found</p>
+                <p className="text-sm">Loading databases...</p>
               </div>
             ) : (
               databases.map((database) => (
