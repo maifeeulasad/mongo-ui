@@ -7,12 +7,13 @@ import {
   PlusIcon,
   TrashIcon,
   WifiIcon,
-  NoSymbolIcon
+  NoSymbolIcon,
+  CircleStackIcon
 } from '@heroicons/react/24/outline'
 import { useAppStore } from '@/store/appStore'
 import { useMongoDB } from '@/hooks/useMongoDB'
 import { cn } from '@/utils'
-import ConnectionModal from './ConnectionModal'
+import ConnectionModal from '@/components/ConnectionModal'
 import { DatabaseTreeItem } from './DatabaseTreeItem'
 
 export default function Sidebar() {
@@ -83,6 +84,11 @@ export default function Sidebar() {
       name: 'Connections',
       href: '/connections',
       icon: ServerIcon,
+    },
+    {
+      name: 'Browser',
+      href: '/browser',
+      icon: CircleStackIcon,
     },
   ]
 
